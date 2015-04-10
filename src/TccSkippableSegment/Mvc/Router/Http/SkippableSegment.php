@@ -104,7 +104,8 @@ class SkippableSegment extends Segment
                 case 'parameter':
                     $skippable = true;
 
-                    if (!empty($this->skippable[$part[1]]) && (!isset($mergedParams[$part[1]]) || !isset($this->defaults[$part[1]]) || $mergedParams[$part[1]] === $this->defaults[$part[1]])) {
+                    if (!empty($this->skippable[$part[1]]) && (!isset($mergedParams[$part[1]]) || 
+                            array_key_exists($part[1], $this->defaults) && $mergedParams[$part[1]] === $this->defaults[$part[1]])) {
                         $this->assembledParams[] = $part[1];
                         break;
                     } elseif (!isset($mergedParams[$part[1]])) {
