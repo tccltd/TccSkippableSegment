@@ -2,8 +2,10 @@
 
 namespace TccSkippableSegment;
 
+use TccSkippableSegment\Mvc\Router\Http\SkippableSegment;
 use Zend\ModuleManager\Feature\ConfigProviderInterface;
 use Zend\ModuleManager\Feature\AutoloaderProviderInterface;
+use Zend\Mvc\Router\RouteInvokableFactory;
 
 class Module implements ConfigProviderInterface, AutoloaderProviderInterface
 {
@@ -11,19 +13,23 @@ class Module implements ConfigProviderInterface, AutoloaderProviderInterface
     {
         return [
             'route_manager' => [
-                'invokables' => [
-                    'SkippableSegment' => 'TccSkippableSegment\Mvc\Router\Http\SkippableSegment',
+                'invokables' => [],
+                'aliases' => [
+                    'SkippableSegment' => SkippableSegment::class,
                 ],
+                'factories' => [
+                    SkippableSegment::class => RouteInvokableFactory::class,
+                ]
             ],
         ];
     }
 
     public function getAutoloaderConfig()
     {
-        return array(
-            'Zend\Loader\ClassMapAutoloader' => array(
+        return [
+            'Zend\Loader\ClassMapAutoloader' => [
                 __DIR__ . '/autoload_classmap.php',
-            ),
-        );
+            ],
+        ];
     }
 }
