@@ -35,10 +35,10 @@ class Module implements ConfigProviderInterface, AutoloaderProviderInterface
 
     public function getAutoloaderConfig()
     {
-        return array(
-            'Zend\Loader\ClassMapAutoloader' => array(
+        return [
+            'Zend\Loader\ClassMapAutoloader' => [
                 __DIR__ . '/autoload_classmap.php',
-            ),
-        );
+            ],
+        ];
     }
 }
