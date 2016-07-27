@@ -1,16 +1,17 @@
 <?php
-namespace TccSkippableSegment\Mvc\Router\Http;
+namespace TccSkippableSegment\Router\Http;
 
-use Zend\Mvc\Router\Http\Segment;
-use Zend\Mvc\Router\Exception;
+use Traversable;
+use Zend\I18n\Translator\TranslatorInterface as Translator;
+use Zend\Router\Exception;
 use Zend\Stdlib\ArrayUtils;
+use Zend\Router\Http\Segment;
 
 /**
  * SkippableSegment route.
  */
 class SkippableSegment extends Segment
 {
-
     /**
      *
      * @var array map of skippable segments
@@ -20,23 +21,22 @@ class SkippableSegment extends Segment
     /**
      * Create a new regex route.
      *
-     * @param string $route
-     * @param array $constraints
-     * @param array $defaults
+     * @param  string $route
+     * @param  array  $constraints
+     * @param  array  $defaults
+     * @param  array  $skippable
      */
-    public function __construct($route, array $constraints = array(), array $defaults = array(), array $skippable = array())
+    public function __construct($route, array $constraints = [], array $defaults = [], array $skippable = [])
     {
-        $this->defaults = $defaults;
+        parent::__construct($route, $constraints, $defaults);
         $this->skippable = $skippable;
-        $this->parts = $this->parseRouteDefinition($route);
-        $this->regex = $this->buildRegex($this->parts, $constraints);
     }
 
     /**
      * factory(): defined by RouteInterface interface.
      *
-     * @see \Zend\Mvc\Router\RouteInterface::factory()
-     * @param array|Traversable $options
+     * @see    \Zend\Router\RouteInterface::factory()
+     * @param  array|Traversable $options
      * @return Segment
      * @throws Exception\InvalidArgumentException
      */
@@ -70,11 +70,11 @@ class SkippableSegment extends Segment
     /**
      * Build a path.
      *
-     * @param array $parts
-     * @param array $mergedParams
-     * @param bool $isOptional
-     * @param bool $hasChild
-     * @param array $options
+     * @param  array   $parts
+     * @param  array   $mergedParams
+     * @param  bool    $isOptional
+     * @param  bool    $hasChild
+     * @param  array   $options
      * @return string
      * @throws Exception\InvalidArgumentException
      * @throws Exception\RuntimeException
@@ -88,11 +88,11 @@ class SkippableSegment extends Segment
 
             $translator = $options['translator'];
             $textDomain = (isset($options['text_domain']) ? $options['text_domain'] : 'default');
-            $locale = (isset($options['locale']) ? $options['locale'] : null);
+            $locale     = (isset($options['locale']) ? $options['locale'] : null);
         }
 
-        $path = '';
-        $skip = true;
+        $path      = '';
+        $skip      = true;
         $skippable = false;
 
         foreach ($parts as $part) {
@@ -104,17 +104,29 @@ class SkippableSegment extends Segment
                 case 'parameter':
                     $skippable = true;
 
-                    if (!empty($this->skippable[$part[1]]) && (!isset($mergedParams[$part[1]]) || 
-                            array_key_exists($part[1], $this->defaults) && $mergedParams[$part[1]] === $this->defaults[$part[1]])) {
+                    if (!empty($this->skippable[$part[1]])
+                        && (
+                            !isset($mergedParams[$part[1]])
+                            || isset($this->defaults[$part[1]])
+                            && ($mergedParams[$part[1]] === $this->defaults[$part[1]])
+                        )
+                    ) {
+                        // Skip the parameter if its marked as "skippable" in $this->skippable
+                        // AND its either unset in the merged params or the default value
                         $this->assembledParams[] = $part[1];
-                        break;
+
+                        return '';
                     } elseif (!isset($mergedParams[$part[1]])) {
                         if (!$isOptional || $hasChild) {
                             throw new Exception\InvalidArgumentException(sprintf('Missing parameter "%s"', $part[1]));
                         }
 
                         return '';
-                    } elseif (!$isOptional || $hasChild || !isset($this->defaults[$part[1]]) || $this->defaults[$part[1]] !== $mergedParams[$part[1]]) {
+                    } elseif (!$isOptional
+                        || $hasChild
+                        || !isset($this->defaults[$part[1]])
+                        || $this->defaults[$part[1]] !== $mergedParams[$part[1]]
+                    ) {
                         $skip = false;
                     }
 
@@ -124,12 +136,12 @@ class SkippableSegment extends Segment
                     break;
 
                 case 'optional':
-                    $skippable = true;
+                    $skippable    = true;
                     $optionalPart = $this->buildPath($part[1], $mergedParams, true, $hasChild, $options);
 
                     if ($optionalPart !== '') {
                         $path .= $optionalPart;
-                        $skip = false;
+                        $skip  = false;
                     }
                     break;
 
